@@ -33,7 +33,7 @@ This project was entirely orchestrated using **Gemini CLI**, an agentic workflow
 
 1. **Clone the repo:**
    ```bash
-   git clone https://github.com/youruser/imageboard.git
+   git clone https://github.com/gcileno/imageboard.git
    cd imageboard
    ```
 
