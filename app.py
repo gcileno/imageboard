@@ -5,7 +5,8 @@ from src.view.components import (
     render_config_section,
     render_image_analysis,
     render_comparison_metrics,
-    render_interactive_grid
+    render_interactive_grid,
+    render_metrics_explanation
 )
 
 # 1. Page Configuration
@@ -32,3 +33,6 @@ render_comparison_metrics(processed_images)
 
 # 7. Interactive Grid Analysis (Cell zoom and metrics)
 render_interactive_grid(processed_images, grid_size)
+
+# 8. Guia de Interpretação e Documentação
+render_metrics_explanation()

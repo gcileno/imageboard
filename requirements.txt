@@ -4,3 +4,4 @@ numpy
 pandas
 plotly
 scikit-image
+google-genai

@@ -11,6 +11,10 @@ Sua missão é garantir precisão matemática e eficiência no processamento de 
     - `Sharpness`: Variância do Laplaciano.
     - `SNR`: Razão sinal-ruído (limpeza).
 
+- **IA & Análises (`analises.py`):**
+    - Integração com Google Gemini para insights baseados em métricas.
+    - Foco em economia de tokens enviando apenas dados estatísticos (texto).
+
 ## 📏 Requisitos de Qualidade
 - **Escalabilidade:** Implemente funções que operem tanto na imagem completa quanto em sub-regiões (grids).
 - **Robustez:** Sempre trate casos de divisão por zero (especialmente em SNR) e redimensionamento automático para comparações.

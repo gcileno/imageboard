@@ -8,7 +8,7 @@ O projeto segue uma separação rigorosa de responsabilidades para facilitar o d
 - **Entry Point (`app.py`):** Apenas orquestra a renderização chamando componentes de alto nível.
 - **UI Components (`src/view/components.py`):** Lógica de seções da página, organização de colunas e métricas visuais.
 - **UI Elements (`src/view/elements.py`):** Widgets atômicos do Streamlit (botões, sliders, uploaders).
-- **Backend/Statistics (`src/services/statistics.py`):** Lógica pura de processamento de imagem (OpenCV, NumPy, Skimage).
+- **Backend/Statistics (`src/services/statistics.py` & `analises.py`):** Lógica pura de processamento de imagem e integração com IA (Gemini).
 - **State Management (`src/state/state.py`):** Centralização do `st.session_state`.
 
 ## 🤖 AI Workflow (Vibe Coding)

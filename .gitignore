@@ -168,3 +168,7 @@ Thumbs.db
 assets/*.jpeg
 assets/*.jpg
 assets/*.png
+
+# Secrets
+.streamlit/secrets.toml
+
