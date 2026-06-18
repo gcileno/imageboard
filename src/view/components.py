@@ -30,95 +30,97 @@ def render_header():
     )
 
 def render_config_section():
-    st.divider()
-    config_col1, config_col2 = st.columns([2, 1])
+    with st.container(border=True):
+        st.markdown("### ⚙️ Painel de Configuração")
+        config_col1, config_col2 = st.columns([2, 1])
 
-    with config_col1:
-        range_gride()
-        grid_size = st.session_state["grid"]
+        with config_col1:
+            range_gride()
+            grid_size = st.session_state["grid"]
 
-    with config_col2:
-        # Layout hack for buttons to be side by side if needed, 
-        # but elements.py buttons are full width or stretch
-        btn_col1, btn_col2 = st.columns(2)
-        with btn_col1:
-            add_image()
-        with btn_col2:
-            remove_image()
-    
-    st.divider()
+        with config_col2:
+            st.write("") # vertical spacing alignment
+            btn_col1, btn_col2 = st.columns(2)
+            with btn_col1:
+                add_image()
+            with btn_col2:
+                remove_image()
     return grid_size
 
 def render_image_analysis(image_keys: List[str], grid_size: int) -> Dict[str, Any]:
-    cols = st.columns(len(image_keys))
     processed_images = {}
+    
+    with st.container(border=True):
+        st.markdown("### 🖼️ Gerenciamento e Visualização de Imagens")
+        cols = st.columns(len(image_keys))
 
-    for idx, key in enumerate(image_keys):
-        with cols[idx]:
-            label = key.replace("_", " ").title()
-            select_image(key_element=key, label=label)
-            
-            uploaded_file = st.session_state.get(key)
-            if uploaded_file is not None:
-                gray_img = process_to_grayscale(uploaded_file.getvalue())
+        for idx, key in enumerate(image_keys):
+            with cols[idx]:
+                label = key.replace("_", " ").title()
+                select_image(key_element=key, label=label)
                 
-                # Show image with grid overlay
-                grid_img = draw_grid_overlay(gray_img, grid_size)
-                show_image(grid_img, label, caption=f"{label} (Grid {grid_size}x{grid_size})")
+                uploaded_file = st.session_state.get(key)
+                if uploaded_file is not None:
+                    gray_img = process_to_grayscale(uploaded_file.getvalue())
+                    
+                    # Show image with grid overlay
+                    grid_img = draw_grid_overlay(gray_img, grid_size)
+                    show_image(grid_img, label, caption=f"{label} (Grid {grid_size}x{grid_size})")
+                    
+                    # Basic Stats & Histogram
+                    hist = calculate_histogram(gray_img)
+                    stats = get_basic_stats(gray_img)
+                    
+                    # Add extra global stats
+                    stats["sharpness"] = float(calculate_sharpness(gray_img))
+                    stats["snr"] = float(calculate_snr(gray_img))
                 
-                # Basic Stats & Histogram
-                hist = calculate_histogram(gray_img)
-                stats = get_basic_stats(gray_img)
-                
-                # Add extra global stats
-                stats["sharpness"] = float(calculate_sharpness(gray_img))
-                stats["snr"] = float(calculate_snr(gray_img))
-            
-                processed_images[key] = {
-                    "img": gray_img,
-                    "label": label,
-                    "stats": stats,
-                    "hist": hist
-                }
+                    processed_images[key] = {
+                        "img": gray_img,
+                        "label": label,
+                        "stats": stats,
+                        "hist": hist
+                    }
     return processed_images
 
 def render_comparison_metrics(processed_images: Dict[str, Any]):
     if not processed_images:
         return
 
-    st.divider()
-
-    # 0. Calculate Quality Metrics (SSIM / PSNR) if reference exists
-    comparison_data = []
-    ref_label = ""
-    if len(processed_images) >= 2:
-        keys = list(processed_images.keys())
-        ref_key = keys[0]
-        ref_data = processed_images[ref_key]
-        ref_label = ref_data['label']
-
-        for i in range(1, len(keys)):
-            target_key = keys[i]
-            target_data = processed_images[target_key]
-            ssim_val = calculate_ssim(ref_data['img'], target_data['img'])
-            psnr_val = calculate_psnr(ref_data['img'], target_data['img'])
-            comparison_data.append({
-                "Label": target_data['label'],
-                "SSIM": ssim_val,
-                "PSNR": psnr_val
-            })
-
-    # 1. Unified Comparison Charts
-    c1, c2 = st.columns(2)
-    with c1:
-        # Quality Gauges above Histogram
-        if comparison_data:
-            display_quality_gauges(comparison_data, ref_label)
+    with st.container(border=True):
+        st.markdown("### 📊 Estatísticas Globais e Qualidade")
         
-        display_combined_histogram(processed_images)
-        
-    with c2:
-        display_combined_stats_chart(processed_images)
+        # 0. Calculate Quality Metrics (SSIM / PSNR) if reference exists
+        comparison_data = []
+        ref_label = ""
+        if len(processed_images) >= 2:
+            keys = list(processed_images.keys())
+            ref_key = keys[0]
+            ref_data = processed_images[ref_key]
+            ref_label = ref_data['label']
+
+            for i in range(1, len(keys)):
+                target_key = keys[i]
+                target_data = processed_images[target_key]
+                ssim_val = calculate_ssim(ref_data['img'], target_data['img'])
+                psnr_val = calculate_psnr(ref_data['img'], target_data['img'])
+                comparison_data.append({
+                    "Label": target_data['label'],
+                    "SSIM": ssim_val,
+                    "PSNR": psnr_val
+                })
+
+        # 1. Unified Comparison Charts
+        c1, c2 = st.columns(2)
+        with c1:
+            # Quality Gauges above Histogram
+            if comparison_data:
+                display_quality_gauges(comparison_data, ref_label)
+            
+            display_combined_histogram(processed_images)
+            
+        with c2:
+            display_combined_stats_chart(processed_images)
 
     return
 
@@ -126,81 +128,81 @@ def render_interactive_grid(processed_images: Dict[str, Any], grid_size: int):
     if not processed_images:
         return
 
-    st.divider()
-    st.header("🔬 Análise Regional Interativa")
-    
-    c_config1, c_config2 = st.columns([1, 2])
-    with c_config1:
-        max_cells = grid_size * grid_size
-        cell_idx = st.number_input("Célula Selecionada", 1, max_cells, 1, key="cell_idx_input")
-    
-    # Convert 1-based index to 0-based row/col
-    idx_0 = cell_idx - 1
-    row_sel = idx_0 // grid_size
-    col_sel = idx_0 % grid_size
-
-    # Prepare data for Radar Chart
-    all_regional_metrics = []
-    
-    ref_key = list(processed_images.keys())[0]
-    ref_data = processed_images[ref_key]
-    h_ref, w_ref = ref_data["img"].shape
-    ch_ref, cw_ref = h_ref // grid_size, w_ref // grid_size
-    y1_ref, y2_ref = row_sel * ch_ref, (row_sel + 1) * ch_ref
-    x1_ref, x2_ref = col_sel * cw_ref, (col_sel + 1) * cw_ref
-    ref_cell = ref_data["img"][y1_ref:y2_ref, x1_ref:x2_ref]
-
-    # Layout: Left for Images, Right for Radar Chart
-    col_images, col_radar = st.columns([1, 2])
-
-    with col_radar:
-        st.subheader(f"📊 Radar de Métricas - Célula {cell_idx}")
-        st.caption("Comparação normalizada de métricas técnicas (Brilho, Contraste, Nitidez, SNR, SSIM, PSNR).")
-        # We need to loop once to collect all metrics
-        for key, data in processed_images.items():
-            h, w = data["img"].shape
-            ch, cw = h // grid_size, w // grid_size
-            y1, y2 = row_sel * ch, (row_sel + 1) * ch
-            x1, x2 = col_sel * cw, (col_sel + 1) * cw
-            cell_data = data["img"][y1:y2, x1:x2]
-            
-            stats = get_basic_stats(cell_data)
-            from src.services.statistics import calculate_sharpness, calculate_snr, calculate_ssim, calculate_psnr
-            sharp = calculate_sharpness(cell_data)
-            snr = calculate_snr(cell_data)
-            
-            m_data = {
-                "label": data["label"],
-                "mean": stats["mean"],
-                "std": stats["std"],
-                "sharpness": sharp,
-                "snr": snr
-            }
-            
-            if key != ref_key:
-                m_data["ssim"] = calculate_ssim(ref_cell, cell_data)
-                m_data["psnr"] = calculate_psnr(ref_cell, cell_data)
-            else:
-                m_data["ssim"] = 1.0
-                m_data["psnr"] = 50.0 # Baseline
-                
-            all_regional_metrics.append(m_data)
+    with st.container(border=True):
+        st.markdown("### 🔬 Análise Regional Interativa")
         
-        display_regional_radar_chart(all_regional_metrics)
+        c_config1, c_config2 = st.columns([1, 2])
+        with c_config1:
+            max_cells = grid_size * grid_size
+            cell_idx = st.number_input("Célula Selecionada", 1, max_cells, 1, key="cell_idx_input")
+        
+        # Convert 1-based index to 0-based row/col
+        idx_0 = cell_idx - 1
+        row_sel = idx_0 // grid_size
+        col_sel = idx_0 % grid_size
 
-    with col_images:
-        st.write(f"#### 🖼️ Recortes (Célula {cell_idx})")
-        # Display images in a smaller grid or list
-        img_cols = st.columns(2)
-        for i, (key, data) in enumerate(processed_images.items()):
-            h, w = data["img"].shape
-            ch, cw = h // grid_size, w // grid_size
-            y1, y2 = row_sel * ch, (row_sel + 1) * ch
-            x1, x2 = col_sel * cw, (col_sel + 1) * cw
-            cell_data = data["img"][y1:y2, x1:x2]
+        # Prepare data for Radar Chart
+        all_regional_metrics = []
+        
+        ref_key = list(processed_images.keys())[0]
+        ref_data = processed_images[ref_key]
+        h_ref, w_ref = ref_data["img"].shape
+        ch_ref, cw_ref = h_ref // grid_size, w_ref // grid_size
+        y1_ref, y2_ref = row_sel * ch_ref, (row_sel + 1) * ch_ref
+        x1_ref, x2_ref = col_sel * cw_ref, (col_sel + 1) * cw_ref
+        ref_cell = ref_data["img"][y1_ref:y2_ref, x1_ref:x2_ref]
+
+        # Layout: Left for Images, Right for Radar Chart
+        col_images, col_radar = st.columns([1, 2])
+
+        with col_radar:
+            st.subheader(f"📊 Radar de Métricas - Célula {cell_idx}")
+            st.caption("Comparação normalizada de métricas técnicas (Brilho, Contraste, Nitidez, SNR, SSIM, PSNR).")
+            # We need to loop once to collect all metrics
+            for key, data in processed_images.items():
+                h, w = data["img"].shape
+                ch, cw = h // grid_size, w // grid_size
+                y1, y2 = row_sel * ch, (row_sel + 1) * ch
+                x1, x2 = col_sel * cw, (col_sel + 1) * cw
+                cell_data = data["img"][y1:y2, x1:x2]
+                
+                stats = get_basic_stats(cell_data)
+                from src.services.statistics import calculate_sharpness, calculate_snr, calculate_ssim, calculate_psnr
+                sharp = calculate_sharpness(cell_data)
+                snr = calculate_snr(cell_data)
+                
+                m_data = {
+                    "label": data["label"],
+                    "mean": stats["mean"],
+                    "std": stats["std"],
+                    "sharpness": sharp,
+                    "snr": snr
+                }
+                
+                if key != ref_key:
+                    m_data["ssim"] = calculate_ssim(ref_cell, cell_data)
+                    m_data["psnr"] = calculate_psnr(ref_cell, cell_data)
+                else:
+                    m_data["ssim"] = 1.0
+                    m_data["psnr"] = 50.0 # Baseline
+                    
+                all_regional_metrics.append(m_data)
             
-            with img_cols[i % 2]:
-                st.image(cell_data, caption=data["label"], use_container_width=True)
+            display_regional_radar_chart(all_regional_metrics)
+
+        with col_images:
+            st.write(f"#### 🖼️ Recortes (Célula {cell_idx})")
+            # Display images in a smaller grid or list
+            img_cols = st.columns(2)
+            for i, (key, data) in enumerate(processed_images.items()):
+                h, w = data["img"].shape
+                ch, cw = h // grid_size, w // grid_size
+                y1, y2 = row_sel * ch, (row_sel + 1) * ch
+                x1, x2 = col_sel * cw, (col_sel + 1) * cw
+                cell_data = data["img"][y1:y2, x1:x2]
+                
+                with img_cols[i % 2]:
+                    st.image(cell_data, caption=data["label"], use_container_width=True)
 
     return
 
@@ -210,7 +212,6 @@ def render_metrics_explanation():
     """
     st.divider()
     st.header("📚 Guia de Interpretação de Métricas")
-    st.info("Entenda o que cada número diz sobre a qualidade das suas imagens e conheça as limitações matemáticas.")
 
     with st.expander("✨ SSIM (Structural Similarity Index)"):
         st.markdown("""
